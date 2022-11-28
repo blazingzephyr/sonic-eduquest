@@ -72,7 +72,9 @@ namespace FunkyQuest
                     };
 
                     _keys[i].text = info.Key;
-                    _signs[i].SetActive(info.IsSignActive);
+
+                    GameObject sign = _signs[i];
+                    sign.SetActive(info.IsSignActive);
                 }
                 else
                 {

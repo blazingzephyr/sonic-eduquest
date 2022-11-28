@@ -119,7 +119,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 200}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 1
-  controlID: 88807
+  controlID: 73
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -145,7 +145,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 8096}
   vertical: 0
-  controlID: 88808
+  controlID: 45
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -165,8 +165,8 @@ MonoBehaviour:
     y: 0
     width: 344
     height: 707
-  m_MinSize: {x: 200, y: 200}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 201, y: 221}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 12}
   m_Panes:
   - {fileID: 12}
@@ -191,8 +191,8 @@ MonoBehaviour:
     y: 0
     width: 1104
     height: 707
-  m_MinSize: {x: 100, y: 100}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 102, y: 121}
+  m_MaxSize: {x: 4002, y: 4021}
   m_ActualView: {fileID: 11}
   m_Panes:
   - {fileID: 13}
@@ -219,8 +219,8 @@ MonoBehaviour:
     y: 0
     width: 472
     height: 707
-  m_MinSize: {x: 275, y: 50}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 276, y: 71}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 15}
   m_Panes:
   - {fileID: 15}
@@ -388,7 +388,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 8e82fdff0c83fdffba85fdff6a86fdff4489fdffa089fdffca8efdffa491fdff0092fdff2697fdff009afdff5c9afdff449ffdff1ea2fdff7aa2fdff1cc0fdffa2c0fdffb2c0fdffbac0fdffc0c0fdffe2c0fdffeec0fdfff0c0fdff0ac3fdff50c4fdffb6c5fdffc0c5fdffcec5fdfffcc5fdfffec5fdff54c9fdff8e1bfeff4038feff4238feff4c38feff5a38feff6c38feff7c38feff8838feff8a38feff643cfeffac3cfeffce3dfeff1a3ffeff3a3ffeff6c3ffeff6e3ffeff6072feffb218ffffc618ffffcc18ffffd018ffffde18ffffee18fffffc18fffffe18ffffbe1bffffdc1bffff6e1cfffff21effff161fffff421fffff441fffffd01fffff5820ffffc820ffffe620ffff1621ffff7c23ffff38e2ffff52e2ffff56e2ffff64e2ffff74e2ffff82e2ffff84e2ffffd2e4fffffee4ffffd8e5ffff2ce8ffff4ae8ffff76e8ffff78e8ffff36eaffff7eeaffffc4ebffff56ecffff94faffffb2faffffc0faffffd0faffffdefaffffe0faffffd25c00002e92000044530100269301003093010032930100c8930100029401000a940100cab20100b2b60100e2b60100aac5010064c6010094c60100a4c701008ec80100
+      m_ExpandedIDs: 0efbffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1013,22 +1013,22 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Scenes
+    - Assets
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 1
   m_StartGridSize: 96
   m_LastFolders:
-  - Assets/Scenes
+  - Assets
   m_LastFoldersGridSize: 96
-  m_LastProjectPath: D:\Personal\Projects\Post-Mid2022\FunkyQuest
+  m_LastProjectPath: D:\Personal\Projects\Post-Mid2022\SonicEduquest
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 325}
-    m_SelectedIDs: 0e810000
-    m_LastClickedID: 33038
-    m_ExpandedIDs: 00000000dc800000de800000e0800000e2800000e4800000e6800000e8800000ea800000ec800000ee8000000c81000000ca9a3b
+    scrollPos: {x: 0, y: 79}
+    m_SelectedIDs: ec810000
+    m_LastClickedID: 33260
+    m_ExpandedIDs: 00000000da810000dc810000de810000e0810000e2810000e4810000e6810000e8810000ea810000ec810000ee81000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1056,7 +1056,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000dc800000de800000e0800000e2800000e4800000e6800000e8800000ea800000ec800000ee8000000c81000000ca9a3b
+    m_ExpandedIDs: 00000000da810000dc810000de810000e0810000e2810000e4810000e6810000e8810000ea810000ec810000ee810000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
