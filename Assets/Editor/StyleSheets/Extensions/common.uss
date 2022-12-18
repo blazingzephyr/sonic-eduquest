@@ -1,0 +1,20 @@
+
+.BoldLabel
+{
+	font-size: 17px;
+}
+
+.ControlLabel
+{
+	font-size: 13px;
+}
+
+.Foldout
+{
+	font-size: 13px;
+}
+
+.HelpBox
+{
+	font-size: 13px;
+}
