@@ -1,14 +1,11 @@
 ﻿
-using UnityEditor;
 using UnityEngine;
 
 namespace SonicEduquest
 {
     [CreateAssetMenu(fileName = "EditorStyle.asset", menuName = "Create Editor Style")]
-    public class EditorStyle : ScriptableObject
+    public class EditorStyle : Style<EditorStyle>
     {
-                                    private static  EditorStyle _instance;
-
         [field: SerializeField]     public          Texture     Member                          { get; private set; }
         [field: SerializeField]     public          Texture     ReadOnly                        { get; private set; }
         [field: SerializeField]     public          Texture     Required                        { get; private set; }
@@ -32,37 +29,5 @@ namespace SonicEduquest
         [field: SerializeField]     public          float       PostHelpBoxSpace                { get; private set; }
         [field: SerializeField]     public          float       PreCovariantFieldSpace          { get; private set; }
         [field: SerializeField]     public          float       PostCovariantFieldSpace         { get; private set; }
-
-        public static EditorStyle GetInstance()
-        {
-            if (EditorStyle._instance == null)
-            {
-                string[] availableStyles = AssetDatabase.FindAssets("t:EditorStyle");
-                if (availableStyles.Length == 0)
-                {
-                    EditorStyle style = CreateInstance<EditorStyle>();
-                    AssetDatabase.CreateAsset(style, "Assets/Settings/EditorStyle.asset");
-                }
-                else
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(availableStyles[0]);
-                    EditorStyle._instance = AssetDatabase.LoadAssetAtPath<EditorStyle>(path);
-                }
-            }
-
-            return EditorStyle._instance;
-        }
-
-        private void Awake()
-        {
-            if (EditorStyle._instance == null)
-            {
-                EditorStyle._instance = this;
-            }
-            else
-            {
-                DestroyImmediate(this, true);
-            }
-        }
     }
 }

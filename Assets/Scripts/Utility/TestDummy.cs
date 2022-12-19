@@ -26,6 +26,12 @@ namespace SonicEduquest
         public  int     Member3 { get; set; }
     }
 
+    public class C
+    {
+        public  int Foo { get; set; }
+        public  int Bar { get; set; }
+    }
+
     public class TestDummy : MonoBehaviour
     {
         [Header("Header 1", "Is this supposed to be something funny?")]
@@ -33,6 +39,12 @@ namespace SonicEduquest
         [SerializeField]
         [Tooltip("String - Read-only.")]
         private string          _readOnlyString;
+
+        [ReadOnly]
+        [SerializeReference]
+        [PropertyDrawer(0)]
+        [Tooltip("C sample.")]
+        private C _sample;
 
         [SerializeField]
         [Tooltip("Sprite Renderer.")]
@@ -57,5 +69,10 @@ namespace SonicEduquest
         [SerializeField]
         [Tooltip("Just a string.")]
         private string          _fooBar;
+
+        [CanBeNull]
+        [SerializeField]
+        [Tooltip("String - Can Be Null.")]
+        private string          _canBeNull;
     }
 }

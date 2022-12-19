@@ -1,4 +1,5 @@
 
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -29,6 +30,7 @@ namespace SonicEduquest
         {
             public  FieldInfo                   Field               { get; set; } = null;
             public  SerializedProperty          Property            { get; set; } = null;
+            public  bool                        CanBeNull           { get; set; } = false;
             public  bool                        IsReadOnly          { get; set; } = false;
             public  bool                        IsRequired          { get; set; } = false;
             public  Action<PropertyDrawerData>  Action              { get; set; } = null;
@@ -67,11 +69,9 @@ namespace SonicEduquest
                 bool isNull = value.IsUnityNull();
 
                 string fieldName = field.Property.name;
-                (FieldColorData coloring, Texture icon, string iconTooltip) = new { isNull, field.IsRequired, field.IsReadOnly } switch
+                (FieldColorData coloring, Texture icon, string iconTooltip) = new { isNull, field.CanBeNull, field.IsRequired, field.IsReadOnly } switch
                 {
-                    { IsReadOnly: true } => (new FieldColorData(), style.ReadOnly, fieldName + " is read-only."),
-
-                    { isNull: true, IsRequired: true }
+                    { CanBeNull: false, isNull: true, IsRequired: true }
                         =>
                         (
                             new FieldColorData
@@ -85,7 +85,7 @@ namespace SonicEduquest
                             fieldName + " must be assigned and cannot be null."
                         ),
 
-                    { isNull: true }
+                    { CanBeNull: false, isNull: true }
                         =>
                         (
                             new FieldColorData
@@ -99,7 +99,7 @@ namespace SonicEduquest
                             fieldName + " is null."
                         ),
 
-                    { IsRequired: true }
+                    { CanBeNull: false, IsRequired: true }
                         =>
                         (
                             new FieldColorData
@@ -111,7 +111,8 @@ namespace SonicEduquest
                             fieldName + " must be assigned."
                         ),
 
-                    { isNull: false, IsRequired: false } => (new FieldColorData(), style.Member, fieldName + ".")
+                    { IsReadOnly: true } => (new FieldColorData(), style.ReadOnly, fieldName + " is read-only."),
+                    { CanBeNull: true } or { isNull: false, IsRequired: false } => (new FieldColorData(), style.Member, fieldName)
                 };
 
                 StartColoring(coloring.Background, coloring.Foreground);
@@ -119,8 +120,17 @@ namespace SonicEduquest
                 GUILayout.Label(iconContent);
                 EditorGUILayout.Space(style.PostIconSpace);
 
-                GUIContent labelContent = new GUIContent(fieldName, field.Property.tooltip);
-                EditorGUILayout.PropertyField(field.Property, labelContent, true);
+                if (field.Action != null)
+                {
+                    PropertyDrawerData data = new PropertyDrawerData(field.Property, field.Field, target);
+                    field.Action(data);
+                }
+                else
+                {
+                    GUIContent labelContent = new GUIContent(fieldName, field.Property.tooltip);
+                    EditorGUILayout.PropertyField(field.Property, labelContent, true);
+                }
+
                 EndColoring();
                 EditorGUILayout.Space(style.PostPropertySpace);
 
@@ -139,7 +149,7 @@ namespace SonicEduquest
                 }
 
                 GUI.enabled = enabled;
-                if (isNull)
+                if (!field.CanBeNull && isNull)
                 {
                     helpBoxes.Add(
                         field.IsRequired ?
@@ -198,7 +208,11 @@ namespace SonicEduquest
                                 break;
 
                             case PropertyDrawerAttribute propertyDrawer:
-                                serializedField.Action = propertyDrawer.Data;
+                                serializedField.Action = PropertyDrawerUtility.CustomDrawers[propertyDrawer.PropertyDrawerIndex];
+                                break;
+
+                            case CanBeNullAttribute:
+                                serializedField.CanBeNull = true;
                                 break;
 
                             case ReadOnlyAttribute:

@@ -6,11 +6,11 @@ namespace SonicEduquest
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public class PropertyDrawerAttribute : Attribute
     {
-        public  Action<PropertyDrawerData>  Data    { get; }
+        public int PropertyDrawerIndex { get; }
 
-        public PropertyDrawerAttribute(Action<PropertyDrawerData> data)
+        public PropertyDrawerAttribute(int propertyDrawerIndex)
         {
-            this.Data = data;
+            this.PropertyDrawerIndex = propertyDrawerIndex;
         }
     }
 }
