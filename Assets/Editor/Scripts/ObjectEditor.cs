@@ -32,9 +32,12 @@ namespace SonicEduquest
             public  FieldInfo                   Field                   { get; set; } = null;
             public  SerializedProperty          Property                { get; set; } = null;
             public  bool                        CanBeNull               { get; set; } = false;
+            public  InspectorAttributeUsage     CanBeNullUsed           { get; set; } = InspectorAttributeUsage.EditorAndPlaymode;
             public  bool                        IsReadOnly              { get; set; } = false;
+            public  InspectorAttributeUsage     ReadOnlyUsed            { get; set; } = InspectorAttributeUsage.EditorAndPlaymode;
             public  PropertyVisibilityMode      VisibilityMode          { get; set; } = PropertyVisibilityMode.EditorAndPlaymode;
             public  bool                        IsRequired              { get; set; } = false;
+            public  InspectorAttributeUsage     RequiredUsed            { get; set; } = InspectorAttributeUsage.EditorAndPlaymode;
             public  Action<PropertyDrawerData>  Action                  { get; set; } = null;
             public  Type[]                      ConcreteTypes           { get; set; } = Array.Empty<Type>();
             public  string[]                    ConcreteTypenames       { get; set; } = Array.Empty<string>();
@@ -76,16 +79,28 @@ namespace SonicEduquest
                 bool isDrawn = IsVisible(field.VisibilityMode);
                 if (isDrawn)
                 {
+                    bool IsUsed(InspectorAttributeUsage attributeUsage) => attributeUsage switch
+                    {
+                        InspectorAttributeUsage.EditorAndPlaymode                               => true,
+                        InspectorAttributeUsage.EditorOnly      when    !Application.isPlaying  => true,
+                        InspectorAttributeUsage.PlaymodeOnly    when    Application.isPlaying   => true,
+                        _                                                                       => false
+                    };
+
+                    bool canBeNull = field.CanBeNull && IsUsed(field.CanBeNullUsed);
+                    bool isReadOnly = field.IsReadOnly && IsUsed(field.ReadOnlyUsed);
+                    bool isRequired = field.IsRequired && IsUsed(field.RequiredUsed);
+
                     bool enabled = GUI.enabled;
-                    GUI.enabled = !field.IsReadOnly && enabled;
+                    GUI.enabled = !isReadOnly && enabled;
 
                     object value = field.Field.GetValue(target);
                     bool isNull = value.IsUnityNull();
 
                     string fieldName = field.Property.name;
-                    (FieldColorData coloring, Texture icon, string iconTooltip) = new { isNull, field.CanBeNull, field.IsRequired, field.IsReadOnly } switch
+                    (FieldColorData coloring, Texture icon, string iconTooltip) = new { isNull, canBeNull, isRequired, isReadOnly } switch
                     {
-                        { CanBeNull: false, isNull: true, IsRequired: true }
+                        { canBeNull: false, isNull: true, isRequired: true }
                             =>
                             (
                                 new FieldColorData
@@ -99,7 +114,7 @@ namespace SonicEduquest
                                 fieldName + " must be assigned and cannot be null."
                             ),
 
-                        { CanBeNull: false, isNull: true }
+                        { canBeNull: false, isNull: true }
                             =>
                             (
                                 new FieldColorData
@@ -113,7 +128,7 @@ namespace SonicEduquest
                                 fieldName + " is null."
                             ),
 
-                        { CanBeNull: false, IsRequired: true }
+                        { canBeNull: false, isRequired: true }
                             =>
                             (
                                 new FieldColorData
@@ -125,8 +140,8 @@ namespace SonicEduquest
                                 fieldName + " must be assigned."
                             ),
 
-                        { IsReadOnly: true } => (new FieldColorData(), style.ReadOnly, fieldName + " is read-only."),
-                        { CanBeNull: true } or { isNull: false, IsRequired: false } => (new FieldColorData(), style.Member, fieldName)
+                        { isReadOnly: true } => (new FieldColorData(), style.ReadOnly, fieldName + " is read-only."),
+                        { canBeNull: true } or { isNull: false, isRequired: false } => (new FieldColorData(), style.Member, fieldName)
                     };
 
                     StartColoring(coloring.Background, coloring.Foreground);
@@ -163,10 +178,10 @@ namespace SonicEduquest
                     }
 
                     GUI.enabled = enabled;
-                    if (!field.CanBeNull && isNull)
+                    if (!canBeNull && isNull)
                     {
                         helpBoxes.Add(
-                            field.IsRequired ?
+                            isRequired ?
                                 (fieldName + " cannot be null.", MessageType.Error, coloring) :
                                 (fieldName + " is null.", MessageType.Warning, coloring)
                         );
@@ -201,14 +216,10 @@ namespace SonicEduquest
                 BindingFlags.IgnoreCase
             );
 
-            List<SerializedField> readOnly = new List<SerializedField>();
-            List<SerializedField> rest = new List<SerializedField>();
-
+            this._serializedFields = new List<SerializedField>(0);
             for (int i = 0; i < this._fields.Length; i++)
             {
                 FieldInfo field = this._fields[i];
-                bool isReadOnly = false;
-
                 SerializedProperty property = serializedObject.FindProperty(field.Name);
                 if (property != null)
                 {
@@ -227,17 +238,19 @@ namespace SonicEduquest
                                 serializedField.Action = PropertyDrawerUtility.CustomDrawers[propertyDrawer.PropertyDrawerIndex];
                                 break;
 
-                            case CanBeNullAttribute:
+                            case CanBeNullAttribute canBeNull:
                                 serializedField.CanBeNull = true;
+                                serializedField.CanBeNullUsed = canBeNull.Usage;
                                 break;
 
-                            case ReadOnlyAttribute:
-                                isReadOnly = true;
+                            case ReadOnlyAttribute readOnlyAttribute:
                                 serializedField.IsReadOnly = true;
+                                serializedField.ReadOnlyUsed = readOnlyAttribute.Usage;
                                 break;
 
-                            case RequiredAttribute:
+                            case RequiredAttribute required:
                                 serializedField.IsRequired = true;
+                                serializedField.RequiredUsed = required.Usage;
                                 break;
 
                             case InspectorCovariantAttribute covariant:
@@ -251,19 +264,9 @@ namespace SonicEduquest
                         }
                     }
 
-                    if (isReadOnly)
-                    {
-                        readOnly.Add(serializedField);
-                    }
-                    else
-                    {
-                        rest.Add(serializedField);
-                    }
+                    this._serializedFields.Add(serializedField);
                 }
             }
-
-            this._serializedFields = new List<SerializedField>(readOnly);
-            this._serializedFields.AddRange(rest);
         }
 
         private void StartColoring(Color background, Color foreground)
