@@ -19,5 +19,7 @@ namespace SonicEduquest
         }
 
         public static bool IsUnityNull(this object obj) => UnityEquals(obj, null);
+
+        public static bool IsUnityNotNull(this object obj) => !IsUnityNull(obj);
     }
 }
