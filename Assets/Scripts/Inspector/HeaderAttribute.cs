@@ -6,11 +6,13 @@ namespace SonicEduquest
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public class HeaderAttribute : Attribute
     {
-        public  string  Header  { get; }
-        public  string  Tooltip { get; }
+        public  PropertyVisibilityMode  VisibilityMode  { get; }
+        public  string                  Header          { get; }
+        public  string                  Tooltip         { get; }
 
-        public HeaderAttribute(string header, string tooltip)
+        public HeaderAttribute(string header, string tooltip, PropertyVisibilityMode visibilityMode = PropertyVisibilityMode.EditorAndPlaymode)
         {
+            this.VisibilityMode = visibilityMode;
             this.Header = header;
             this.Tooltip = tooltip;
         }

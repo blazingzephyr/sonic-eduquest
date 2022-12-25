@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using static SonicEduquest.ReadOnlyAttribute;
 using HelpBoxList = System.Collections.Generic.List<(string Label, UnityEditor.MessageType MessageType, SonicEduquest.ObjectEditor.FieldColorData Coloring)>;
 
 namespace SonicEduquest
@@ -20,24 +21,26 @@ namespace SonicEduquest
 
         public record FieldColorData
         {
-            public  Color   Background          { get; set; } = GUI.backgroundColor;
-            public  Color   Foreground          { get; set; } = GUI.contentColor;
-            public  Color   HelpBoxBackground   { get; set; } = GUI.backgroundColor;
-            public  Color   HelpBoxForeground   { get; set; } = GUI.contentColor;
+            public  Color   Background        { get; set; } = GUI.backgroundColor;
+            public  Color   Foreground        { get; set; } = GUI.contentColor;
+            public  Color   HelpBoxBackground { get; set; } = GUI.backgroundColor;
+            public  Color   HelpBoxForeground { get; set; } = GUI.contentColor;
         }
 
         public class SerializedField
         {
-            public  FieldInfo                   Field               { get; set; } = null;
-            public  SerializedProperty          Property            { get; set; } = null;
-            public  bool                        CanBeNull           { get; set; } = false;
-            public  bool                        IsReadOnly          { get; set; } = false;
-            public  bool                        IsRequired          { get; set; } = false;
-            public  Action<PropertyDrawerData>  Action              { get; set; } = null;
-            public  Type[]                      ConcreteTypes       { get; set; } = Array.Empty<Type>();
-            public  string[]                    ConcreteTypenames   { get; set; } = Array.Empty<string>();
-            public  string                      Header              { get; set; } = string.Empty;
-            public  string                      HeaderTooltip       { get; set; } = string.Empty;
+            public  FieldInfo                   Field                   { get; set; } = null;
+            public  SerializedProperty          Property                { get; set; } = null;
+            public  bool                        CanBeNull               { get; set; } = false;
+            public  bool                        IsReadOnly              { get; set; } = false;
+            public  PropertyVisibilityMode      VisibilityMode          { get; set; } = PropertyVisibilityMode.EditorAndPlaymode;
+            public  bool                        IsRequired              { get; set; } = false;
+            public  Action<PropertyDrawerData>  Action                  { get; set; } = null;
+            public  Type[]                      ConcreteTypes           { get; set; } = Array.Empty<Type>();
+            public  string[]                    ConcreteTypenames       { get; set; } = Array.Empty<string>();
+            public  string                      Header                  { get; set; } = string.Empty;
+            public  string                      HeaderTooltip           { get; set; } = string.Empty;
+            public  PropertyVisibilityMode      HeaderVisibilityMode    { get; set; } = PropertyVisibilityMode.EditorAndPlaymode;
         }
 
         public override void OnInspectorGUI()
@@ -53,8 +56,16 @@ namespace SonicEduquest
             HelpBoxList helpBoxes = new HelpBoxList();
             foreach (SerializedField field in this._serializedFields)
             {
-                bool hasHeader = !String.IsNullOrEmpty(field.Header);
-                if (hasHeader)
+                bool IsVisible(PropertyVisibilityMode visibilityMode) => visibilityMode switch
+                {
+                    PropertyVisibilityMode.EditorAndPlaymode                                => true,
+                    PropertyVisibilityMode.EditorOnly       when    !Application.isPlaying  => true,
+                    PropertyVisibilityMode.PlaymodeOnly     when    Application.isPlaying   => true,
+                    _                                                                       => false
+                };
+
+                bool drawHeader = !String.IsNullOrEmpty(field.Header) && IsVisible(field.HeaderVisibilityMode);
+                if (drawHeader)
                 {
                     EditorGUILayout.Space(style.PreHeaderSpace);
                     GUIContent header = new GUIContent(field.Header, field.HeaderTooltip);
@@ -62,100 +73,104 @@ namespace SonicEduquest
                     EditorGUILayout.Space(style.PostHeaderSpace);
                 }
 
-                bool enabled = GUI.enabled;
-                GUI.enabled = !field.IsReadOnly && enabled;
-
-                object value = field.Field.GetValue(target);
-                bool isNull = value.IsUnityNull();
-
-                string fieldName = field.Property.name;
-                (FieldColorData coloring, Texture icon, string iconTooltip) = new { isNull, field.CanBeNull, field.IsRequired, field.IsReadOnly } switch
+                bool isDrawn = IsVisible(field.VisibilityMode);
+                if (isDrawn)
                 {
-                    { CanBeNull: false, isNull: true, IsRequired: true }
-                        =>
-                        (
-                            new FieldColorData
-                            {
-                                Background = style.BackgroundRequiredNull,
-                                Foreground = style.ForegroundRequiredNull,
-                                HelpBoxBackground = style.HelpBoxBackgroundRequiredNull,
-                                HelpBoxForeground = style.HelpBoxForegroundRequiredNull
-                            },
-                            style.RequiredNull,
-                            fieldName + " must be assigned and cannot be null."
-                        ),
+                    bool enabled = GUI.enabled;
+                    GUI.enabled = !field.IsReadOnly && enabled;
 
-                    { CanBeNull: false, isNull: true }
-                        =>
-                        (
-                            new FieldColorData
-                            {
-                                Background = style.BackgroundNull,
-                                Foreground = style.ForegroundNull,
-                                HelpBoxBackground = style.HelpBoxBackgroundNull,
-                                HelpBoxForeground = style.HelpBoxForegroundNull
-                            },
-                            style.Null,
-                            fieldName + " is null."
-                        ),
+                    object value = field.Field.GetValue(target);
+                    bool isNull = value.IsUnityNull();
 
-                    { CanBeNull: false, IsRequired: true }
-                        =>
-                        (
-                            new FieldColorData
-                            {
-                                Background = style.BackgroundRequired,
-                                Foreground = style.ForegroundRequired
-                            },
-                            style.Required,
-                            fieldName + " must be assigned."
-                        ),
-
-                    { IsReadOnly: true } => (new FieldColorData(), style.ReadOnly, fieldName + " is read-only."),
-                    { CanBeNull: true } or { isNull: false, IsRequired: false } => (new FieldColorData(), style.Member, fieldName)
-                };
-
-                StartColoring(coloring.Background, coloring.Foreground);
-                GUIContent iconContent = new GUIContent(icon, iconTooltip);
-                GUILayout.Label(iconContent);
-                EditorGUILayout.Space(style.PostIconSpace);
-
-                if (field.Action != null)
-                {
-                    PropertyDrawerData data = new PropertyDrawerData(field.Property, field.Field, target);
-                    field.Action(data);
-                }
-                else
-                {
-                    GUIContent labelContent = new GUIContent(fieldName, field.Property.tooltip);
-                    EditorGUILayout.PropertyField(field.Property, labelContent, true);
-                }
-
-                EndColoring();
-                EditorGUILayout.Space(style.PostPropertySpace);
-
-                if (field.ConcreteTypes.Length > 0)
-                {
-                    EditorGUILayout.Space(style.PreCovariantFieldSpace);
-
-                    int index = Array.IndexOf(field.ConcreteTypes, value.GetType());
-                    int selectedIndex = GUILayout.SelectionGrid(index, field.ConcreteTypenames, 4);
-                    EditorGUILayout.Space(style.PostCovariantFieldSpace);
-
-                    if (index != selectedIndex)
+                    string fieldName = field.Property.name;
+                    (FieldColorData coloring, Texture icon, string iconTooltip) = new { isNull, field.CanBeNull, field.IsRequired, field.IsReadOnly } switch
                     {
-                        field.Property.managedReferenceValue = Activator.CreateInstance(field.ConcreteTypes[selectedIndex]);
-                    }
-                }
+                        { CanBeNull: false, isNull: true, IsRequired: true }
+                            =>
+                            (
+                                new FieldColorData
+                                {
+                                    Background = style.BackgroundRequiredNull,
+                                    Foreground = style.ForegroundRequiredNull,
+                                    HelpBoxBackground = style.HelpBoxBackgroundRequiredNull,
+                                    HelpBoxForeground = style.HelpBoxForegroundRequiredNull
+                                },
+                                style.RequiredNull,
+                                fieldName + " must be assigned and cannot be null."
+                            ),
 
-                GUI.enabled = enabled;
-                if (!field.CanBeNull && isNull)
-                {
-                    helpBoxes.Add(
-                        field.IsRequired ?
-                            (fieldName + " cannot be null.",   MessageType.Error,      coloring) :
-                            (fieldName + " is null.",         MessageType.Warning, coloring)
-                    );
+                        { CanBeNull: false, isNull: true }
+                            =>
+                            (
+                                new FieldColorData
+                                {
+                                    Background = style.BackgroundNull,
+                                    Foreground = style.ForegroundNull,
+                                    HelpBoxBackground = style.HelpBoxBackgroundNull,
+                                    HelpBoxForeground = style.HelpBoxForegroundNull
+                                },
+                                style.Null,
+                                fieldName + " is null."
+                            ),
+
+                        { CanBeNull: false, IsRequired: true }
+                            =>
+                            (
+                                new FieldColorData
+                                {
+                                    Background = style.BackgroundRequired,
+                                    Foreground = style.ForegroundRequired
+                                },
+                                style.Required,
+                                fieldName + " must be assigned."
+                            ),
+
+                        { IsReadOnly: true } => (new FieldColorData(), style.ReadOnly, fieldName + " is read-only."),
+                        { CanBeNull: true } or { isNull: false, IsRequired: false } => (new FieldColorData(), style.Member, fieldName)
+                    };
+
+                    StartColoring(coloring.Background, coloring.Foreground);
+                    GUIContent iconContent = new GUIContent(icon, iconTooltip);
+                    GUILayout.Label(iconContent);
+                    EditorGUILayout.Space(style.PostIconSpace);
+
+                    if (field.Action != null)
+                    {
+                        PropertyDrawerData data = new PropertyDrawerData(field.Property, field.Field, target);
+                        field.Action(data);
+                    }
+                    else
+                    {
+                        GUIContent labelContent = new GUIContent(fieldName, field.Property.tooltip);
+                        EditorGUILayout.PropertyField(field.Property, labelContent, true);
+                    }
+
+                    EndColoring();
+                    EditorGUILayout.Space(style.PostPropertySpace);
+
+                    if (field.ConcreteTypes.Length > 0)
+                    {
+                        EditorGUILayout.Space(style.PreCovariantFieldSpace);
+
+                        int index = Array.IndexOf(field.ConcreteTypes, value.GetType());
+                        int selectedIndex = GUILayout.SelectionGrid(index, field.ConcreteTypenames, 4);
+                        EditorGUILayout.Space(style.PostCovariantFieldSpace);
+
+                        if (index != selectedIndex)
+                        {
+                            field.Property.managedReferenceValue = Activator.CreateInstance(field.ConcreteTypes[selectedIndex]);
+                        }
+                    }
+
+                    GUI.enabled = enabled;
+                    if (!field.CanBeNull && isNull)
+                    {
+                        helpBoxes.Add(
+                            field.IsRequired ?
+                                (fieldName + " cannot be null.", MessageType.Error, coloring) :
+                                (fieldName + " is null.", MessageType.Warning, coloring)
+                        );
+                    }
                 }
             }
 
@@ -205,6 +220,7 @@ namespace SonicEduquest
                             case HeaderAttribute headerAttribute:
                                 serializedField.Header = headerAttribute.Header;
                                 serializedField.HeaderTooltip = headerAttribute.Tooltip;
+                                serializedField.HeaderVisibilityMode = headerAttribute.VisibilityMode;
                                 break;
 
                             case PropertyDrawerAttribute propertyDrawer:
@@ -227,6 +243,10 @@ namespace SonicEduquest
                             case InspectorCovariantAttribute covariant:
                                 serializedField.ConcreteTypes = covariant.Concrete;
                                 serializedField.ConcreteTypenames = Array.ConvertAll(covariant.Concrete, t => t.FullName);
+                                break;
+
+                            case PropertyVisibilityAttribute propertyVisibility:
+                                serializedField.VisibilityMode = propertyVisibility.VisibilityMode;
                                 break;
                         }
                     }
