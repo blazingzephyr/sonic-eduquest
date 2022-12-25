@@ -15,13 +15,10 @@ namespace SonicEduquest
                 GUI.enabled = false;
 
                 string fieldName = data.Field.Name;
-                bool isNull = data.Field.GetValue(data.Target).IsUnityNull();
+                string not = data.Field.GetValue(data.Target).IsUnityNull() ? String.Empty : "not";
 
-                GUIContent label = new GUIContent(fieldName, data.Property.tooltip);
-                GUIContent toggle = new GUIContent(DrawerUtilityStyle.GetInstance().Null, fieldName + (isNull ? " is null." : " is not null."));
-
-                EditorGUILayout.PrefixLabel(label);
-                GUILayout.Toggle(isNull, toggle);
+                GUIContent label = new GUIContent($"{fieldName} is {not} null.", data.Property.tooltip);
+                EditorGUILayout.LabelField(label);
                 GUI.enabled = enabled;
             }
         };
