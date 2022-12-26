@@ -12,13 +12,15 @@ namespace SonicEduquest
     [CustomEditor(typeof(object), true)]
     public class ObjectEditor : Editor
     {
-        private Type                    _inspectedType;
-        private FieldInfo[]             _fields;
-        private List<SerializedField>   _serializedFields;
-        private Color                   _previousBackground;
-        private Color                   _previousForeground;
+        private static  Dictionary<int, InspectedObject>    _inspectedObjects;
 
-        private record FieldColorData
+        private         Type                                _inspectedType;
+        private         FieldInfo[]                         _fields;
+        private         List<SerializedField>               _serializedFields;
+        private         Color                               _previousBackground;
+        private         Color                               _previousForeground;
+
+        private class FieldColorData
         {
             public  Color   Background        { get; set; } = GUI.backgroundColor;
             public  Color   Foreground        { get; set; } = GUI.contentColor;
@@ -45,6 +47,20 @@ namespace SonicEduquest
             public  PropertyVisibilityMode      HeaderVisibilityMode    { get; set; } = PropertyVisibilityMode.EditorAndPlaymode;
         }
 
+        private class InspectedObject
+        {
+            public  bool                        IsPlaying       { get; set; }
+            public  bool                        SaveDuringPlay  { get; set; }
+            public  Dictionary<string, object>  Properties      { get; set; }
+
+            public InspectedObject()
+            {
+                this.IsPlaying = Application.isPlaying;
+                this.SaveDuringPlay = false;
+                this.Properties = new Dictionary<string, object>();
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             if (this._serializedFields == null)
@@ -55,7 +71,33 @@ namespace SonicEduquest
             this.serializedObject.Update();
             EditorStyle style = EditorStyle.GetInstance();
 
-            var helpBoxes = new List<(string Label, MessageType MessageType, FieldColorData Coloring)>();
+            bool isPlaying = Application.isPlaying;
+            int id = this.target.GetInstanceID();
+            InspectedObject inspectedObject = ObjectEditor._inspectedObjects[id];
+
+            if (isPlaying)
+            {
+                GUIContent saveDuringPlay = new GUIContent("Save During Play", "Saves your changes during play mode.");
+                EditorGUILayout.Space();
+                inspectedObject.SaveDuringPlay = GUILayout.Toggle(inspectedObject.SaveDuringPlay, saveDuringPlay);
+                EditorGUILayout.Space();
+            }
+
+            if (inspectedObject.IsPlaying != isPlaying)
+            {
+                if (inspectedObject.IsPlaying)
+                {
+                    foreach (FieldInfo field in this._fields)
+                    {
+                        object value = inspectedObject.Properties[field.Name];
+                        field.SetValue(this.target, value);
+                    }
+                }
+
+                inspectedObject.IsPlaying = isPlaying;
+            }
+
+            var helpBoxes = new List<(string Label, MessageType MessageType, ObjectEditor.FieldColorData Coloring)>();
             foreach (SerializedField field in this._serializedFields)
             {
                 bool IsVisible(PropertyVisibilityMode visibilityMode) => visibilityMode switch
@@ -159,6 +201,8 @@ namespace SonicEduquest
                         EditorGUILayout.PropertyField(field.Property, labelContent, true);
                     }
 
+                    inspectedObject.Properties[fieldName] = field.Field.GetValue(this.target);
+
                     EndColoring();
                     EditorGUILayout.Space(style.PostPropertySpace);
 
@@ -205,6 +249,20 @@ namespace SonicEduquest
 
         private void LoadData()
         {
+            if (ObjectEditor._inspectedObjects == null)
+            {
+                ObjectEditor._inspectedObjects = new Dictionary<int, InspectedObject>();
+            }
+
+            int id = this.target.GetInstanceID();
+            bool exists = ObjectEditor._inspectedObjects.TryGetValue(id, out InspectedObject inspectedObject);
+
+            if (!exists)
+            {
+                inspectedObject = new InspectedObject();
+                ObjectEditor._inspectedObjects.Add(id, inspectedObject);
+            }
+
             this._inspectedType = serializedObject.targetObject.GetType();
             this._fields = this._inspectedType.GetFields(
                 BindingFlags.Instance |
@@ -220,6 +278,12 @@ namespace SonicEduquest
             {
                 FieldInfo field = this._fields[i];
                 SerializedProperty property = serializedObject.FindProperty(field.Name);
+
+                if (inspectedObject.IsPlaying == Application.isPlaying)
+                {
+                    inspectedObject.Properties[field.Name] = field.GetValue(this.target);
+                }
+
                 if (property != null)
                 {
                     SerializedField serializedField = new SerializedField { Field = field, Property = property };
