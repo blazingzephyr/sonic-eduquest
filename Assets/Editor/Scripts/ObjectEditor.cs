@@ -6,7 +6,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using static SonicEduquest.ReadOnlyAttribute;
-using HelpBoxList = System.Collections.Generic.List<(string Label, UnityEditor.MessageType MessageType, SonicEduquest.ObjectEditor.FieldColorData Coloring)>;
 
 namespace SonicEduquest
 {
@@ -19,7 +18,7 @@ namespace SonicEduquest
         private Color                   _previousBackground;
         private Color                   _previousForeground;
 
-        public record FieldColorData
+        private record FieldColorData
         {
             public  Color   Background        { get; set; } = GUI.backgroundColor;
             public  Color   Foreground        { get; set; } = GUI.contentColor;
@@ -27,7 +26,7 @@ namespace SonicEduquest
             public  Color   HelpBoxForeground { get; set; } = GUI.contentColor;
         }
 
-        public class SerializedField
+        private class SerializedField
         {
             public  FieldInfo                   Field                   { get; set; } = null;
             public  SerializedProperty          Property                { get; set; } = null;
@@ -56,7 +55,7 @@ namespace SonicEduquest
             this.serializedObject.Update();
             EditorStyle style = EditorStyle.GetInstance();
 
-            HelpBoxList helpBoxes = new HelpBoxList();
+            var helpBoxes = new List<(string Label, MessageType MessageType, FieldColorData Coloring)>();
             foreach (SerializedField field in this._serializedFields)
             {
                 bool IsVisible(PropertyVisibilityMode visibilityMode) => visibilityMode switch
