@@ -1,6 +1,14 @@
-# SonicEduquest
-A 2D sidescroller quest game made out of 3 mini-quests developed in Unity 2022.1.23f1 as a school project.
+### [Switch to ``develop``](https://github.com/blazingzephyr/sonic-eduquest/tree/develop)<br>[Русская Версия](./README_RU.md)
 
-## Warning! This is oudated!
-This branch has been archived and contains pre-```2022.12.01-wip.1``` code.
-It is left unfinished for reference purposes.
+# Sonic's Eduquest
+
+**Sonic's Eduquest**, also referred to as **SonicEduquest**, is a short puzzle sidescroller game developed in Unity 2022.2.0f1.
+
+## ⚠ Warning!
+<a name="Warning"></a>
+
+This branch has been archived and contains oudated code left for reference!
+
+I highly suggest switching to [``develop``](https://github.com/blazingzephyr/sonic-eduquest/tree/develop) branch!
+
+However, if you want to study the code I suggest branching off [this commit](https://github.com/blazingzephyr/sonic-eduquest/commit/4752ac9b4c32c7b7cdf52f29e49d235dfe33a750).
