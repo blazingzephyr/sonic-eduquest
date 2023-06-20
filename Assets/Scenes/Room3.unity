@@ -11053,7 +11053,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4108602899476009877, guid: bb6efe38b0d66994bad7b8074abf3c1c, type: 3}
       propertyPath: orthographic size
-      value: 6.7291665
+      value: 8.03125
       objectReference: {fileID: 0}
     - target: {fileID: 6576701324513256132, guid: bb6efe38b0d66994bad7b8074abf3c1c, type: 3}
       propertyPath: m_Sprite
